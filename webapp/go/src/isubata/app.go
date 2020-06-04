@@ -95,7 +95,7 @@ type User struct {
 
 func getUser(userID int64) (*User, error) {
 	u := User{}
-	if err := db.Get(&u, "SELECT * FROM user WHERE id = ?", userID); err != nil {
+	if err := db.Get(&u, "SELECT * FROM user WHERE id = ?", userID); err != nil {git 
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -685,6 +685,14 @@ func postProfile(c echo.Context) error {
 func getIcon(c echo.Context) error {
 	var name string
 	var data []byte
+	c.Response().Header().Set("Cache-Control", "public, max-age=31536000")
+	c.Response().Header().Set("ETag", name[0:len(name)-4])
+	c.Response().Header().Set("Last-Modified", "Mon, 16 Oct 2017 16:33:02 GMT")
+
+	if c.Request().Header.Get("If-Modified-Since") != "" || c.Request().Header.Get("If-None-Match") != "" {
+		return c.NoContent(304)
+	}
+
 	err := db.QueryRow("SELECT name, data FROM image WHERE name = ?",
 		c.Param("file_name")).Scan(&name, &data)
 	if err == sql.ErrNoRows {
